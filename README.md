@@ -4,9 +4,13 @@ QLExpress
 QLExpress的特性支持：
 
 1、编译执行：
+
 编译生成基础指令后执行，性能能得到基本保障。执行过程：单词分解-->单词类型分析-->语法分析-->生成运行期指令集合-->执行生成的指令集合
+
 runner.execute("10 * 10 + 1 + 2 * 3 + 5 * 2", null, true,null); 
+
 最后生成的指令：
+
 	1:LoadData 10
 	2:LoadData 10
 	3:OP : * OPNUMBER[2] 
@@ -20,6 +24,8 @@ runner.execute("10 * 10 + 1 + 2 * 3 + 5 * 2", null, true,null);
 	11:LoadData 2
 	12:OP : * OPNUMBER[2] 
 	13:OP : + OPNUMBER[2]
+	
+	
 2、支持标准的java语法、JAVA运算符号和关键字
 import：引入一个包或者类，例如：import java.util.*;需要放在脚本的最前面
 new:创建一个对象，例如：new ArrayList();
@@ -30,13 +36,22 @@ else:操作符号
 break: 终止循环
 continue: 绩效循环
 return: 返回
+
      A、四则运算 : 10 * 10 + 1 + 2 * 3 + 5 * 2
      B、boolean运算: 3 > 2 and 2 > 3
      C、创建对象，对象方法调用，静态方法调用:new com.ql.util.express.test.BeanExample("张三").unionName("李四")
      D、变量赋值：a = 3 + 5
      E、支持 in,max,min:  (a in (1,2,4)) and (b in("abc","bcd","efg"))
+     
+     
 3、自定义的关键字
-include:在一个表达式中引入其它表达式。例如： include com.taobao.upp.b; 资源的转载可以自定义接口IExpressResourceLoader来实现，缺省是从文件中装载
+
+include:在一个表达式中引入其它表达式。
+
+例如： include com.taobao.upp.b; 
+
+资源的转载可以自定义接口IExpressResourceLoader来实现，缺省是从文件中装载
+
 []:匿名创建数组.int[][] abc = [[11,12,13],[21,22,23]];
 NewMap:创建HashMap. Map abc = NewMap(1:1,2:2);Map abc = NewMap("a":1,"b":2)
 NewList:串接ArrayList.List abc = NewList(1,2,3);
@@ -48,34 +63,44 @@ function: 定义函数，例如： function add(int a,int b){  return a+b; };
 in: 操作符号，例如： 3 in (3,4,5)
 mod:操作符号，例如：  7 mod 3 
 like:操作符号，例如： "abc" like 'ab%'
+
+
 4、自定义的系统函数,后续还会不断的添加
    max:取最大值max(3,4,5)
    min:最最小值min(2,9,1)
    round:四舍五入round(19.08,1)
    print:输出信息不换行print("abc")
    println:输出信息并换行 println("abc")
+   
 5、提供表达式上下文，属性的值不需要在初始的时候全部加入，而是在表达式计算的时候，需要什么信息才通过上下文接口获取。
 避免因为不知道计算的需求，而在上下文中把可能需要的数据都加入。 
 runner.execute("三星卖家 and 消保用户",errorList,true,expressContext) "三星卖家"和"消保用户"的属性是在需要的时候通过接口去获取。
+
 6、可以将计算结果直接存储到上下文中供后续业务使用。例如：
   runner.execute("c = 1000 + 2000",errorList,true,expressContext); 
   则在expressContext中会增加一个属性c=3000，也可以在expressContext实现直接的数据库操作等。
+  
 7、支持高精度浮点运算，只需要在创建执行引擎的时候指定参数即可：new ExpressRunner(true,false);
+
 8、可以将Class和Spring对象的方法映射为表达式计算中的别名，方便其他业务人员的立即和配置。例如
      将 Math.abs() 映射为 "取绝对值"。
       runner.addFunctionOfClassMethod("取绝对值", Math.class.getName(), "abs",new String[] { "double" }, null); 
       runner.execute("取绝对值(-5.0)",null,true,null); 
+      
 9、可以为已经存在的boolean运算操作符号设置别名，增加错误信息同步输出，在计算结果为false的时候，同时返回错误信息,减少业务系统相关的处理代码
    runner.addOperatorWithAlias("属于", "in", "用户$1不在允许的范围")。
    用户自定义的函数同样也可以设置错误信息：例如： 
    runner.addFunctionOfClassMethod("isOk", BeanExample?.class.getName(),"isOk", new String[] { "String" }, "$1 不是VIP用户"); 
   则在调用:
+  
      List errorList = new ArrayList?(); 
      Object result =runner.execute("( (1+1) 属于 (4,3,5)) and isOk("玄难")",errorList,true,null); 
      执行结果 result = false.同时在errorList中还会返回2个错误原因： 
          1、"用户 2 不在允许的范围"
          2、玄难 不是VIP用户 
+         
 10、可以自定义函数,自定一个操作函数 group
+
 class GroupOperator extends Operator {
 	public GroupOperator(String aName) {
 		this.name= aName;
@@ -88,10 +113,12 @@ class GroupOperator extends Operator {
 		return result;
 	}
 }
+
 则执行：
      runner.addFunction("累加", new GroupOperator("累加"));
      runner.addFunction("group", new GroupOperator("group"));
     //则执行：group(2,3,4)  = 9 ,累加(1,2,3)+累加(4,5,6)=21
+    
 11、可以自定操作符号。自定义的操作符号优先级设置为最高。例如自定一个操作函数 love：
 class LoveOperator extends Operator {	
 	public LoveOperator(String aName) {
@@ -105,14 +132,21 @@ class LoveOperator extends Operator {
 		return result;
 	}
 }
+
 然后增加到运算引擎：
  runner.addOperator("love", new LoveOperator("love"));
     //则执行：'a' love 'b' love 'c' love 'd' = "d{c{b{a}b}c}d"
+    
 12、可以重载已有的操作符号。例如替换“＋”的执行逻辑。参见：com.ql.util.express.test.ReplaceOperatorTest
+
 13、可以延迟运算需要的数据
+
 14、一个脚本可以调用其它脚本定义的宏和函数.参见com.ql.util.express.test.DefineTest
+
 15、可以类似VB的语法来使用操作符号和函数。print abc; 等价于 print(abc).参见 com.ql.util.express.test.OpCallTest
+
 16、支持类定义
+
 17、对 in 操作支持后面的是一个数组或者List变量义[完成2012-06-01]
 
 
@@ -131,8 +165,10 @@ QLExpress 是一个开放的脚本处理工具，它开放了很多api扩展定�
  
  
   QLExpress脚本语言技术讲解（2） -----QL的基本执行过程
+  
 分类： QL语言 2012-02-20 22:33 1102人阅读 评论(0) 收藏 举报
 脚本语言integerexpressexceptionfunction
+
 [java] view plaincopy
 @org.junit.Test  
 public void testDemo() throws Exception{  
